@@ -1,5 +1,5 @@
 import os
-
+from datetime import datetime
 from flask import Flask, request, send_file
 from werkzeug.utils import secure_filename
 
@@ -10,10 +10,12 @@ from flask_cors import CORS
 
 UPLOAD_FOLDER = "./uploads"
 ALLOWED_EXTENSIONS = set(['jpg', 'jpeg'])
+OUTPUT_FOLDER = "./result"
 
 app = Flask(__name__)
 CORS(app)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['OUTPUT_FOLDER'] = OUTPUT_FOLDER
 
 
 def allowed_file(filename):
@@ -31,7 +33,9 @@ def get_image():
         file.save(path_name)
 
         result = pred_landmark(path_name)
-        if cv.imwrite("./result.jpg", result):
-            return send_file("result.jpg", mimetype='image/jpg')
+        now = datetime.now()
+        output_path = os.path.join(app.config['OUTPUT_FOLDER'], "output_" + str(datetime.timestamp(now)) + ".jpg")
+        if cv.imwrite(output_path, result):
+            return send_file(output_path, mimetype='image/jpg')
 
     return None
