@@ -10,6 +10,8 @@ class App extends React.Component {
 
       this.state = {
         result: null,
+        angle: null,
+        vertebras: null,
         loading: false
       }
     }
@@ -23,16 +25,20 @@ class App extends React.Component {
       let formData = new FormData()
       formData.append('image', picture, picture.fileName)
 
-      axios.post("http://localhost:5000/predict", formData, {
+      axios.post("http://localhost:5000/get_image", formData, {
         responseType: 'arraybuffer',
         headers: {
           'Content-Type': `multipart/form-data; boundary=${formData._boundary}`,
         }
       }).then((res) => {
 
-        this.setState({
-          result: new Buffer(res.data, 'binary').toString('base64') || "",
-          loading: false
+        axios.get("http://localhost:5000/get_angle").then(({data }) => {
+          this.setState({
+            result: new Buffer(res.data, 'binary').toString('base64') || "",
+            angle: data.angle,
+            vertebras: data.vertebras,
+            loading: false
+          })
         })
       }).catch((err) => {
         console.log(err)
@@ -44,12 +50,15 @@ class App extends React.Component {
 
     startover = () => {
       this.setState({
-        result: null
+        result: null,
+        angle: null,
+        vertebras: null,
+        loading: false
       })
     }
  
     render() {
-      const {result, loading } = this.state
+      const {result, vertebras, angle, loading } = this.state
 
       let content = <ImageUploader
         withIcon={true}
@@ -60,10 +69,15 @@ class App extends React.Component {
         maxFileSize={5242880}
         singleImage={true}
       />
-      if(result) {
+      if(result && angle) {
         content = <div className="App-header">
           <button className="btn" onClick={this.startover}>Start Over</button><br/>
           <img src={"data:image/jpeg;base64," + result} /> 
+          <p></p>
+          <div>
+            Most tilt vertebras are: {vertebras}, Cobb angle is: {angle}
+            <br />
+          </div>
         </div>
         
       } 
